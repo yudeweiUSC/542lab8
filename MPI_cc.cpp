@@ -8,7 +8,6 @@
 #include <mpi.h>
 
 using namespace std;
-using std::cout;
 
 constexpr long long int KMemory = 1083741824;  // 1 GiB
 size_t last_pos = 0;
@@ -78,6 +77,7 @@ int main(int argc, char** argv) {
   long long int* start_id;
   start_time = MPI_Wtime();
 
+  std::cout << "----------------------------------------------------------" << std::endl;
   // read the file at master node
   size_t file_size;
   FILE* file;
@@ -112,7 +112,6 @@ int main(int argc, char** argv) {
     }
     n_total_lines = 0;
     MPI_Bcast(&status, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    cout << "status sent from rank 0" << endl;
     if (status == 0) {
       break;
     }
@@ -157,7 +156,7 @@ int main(int argc, char** argv) {
           MPI_Send(file_buf + start_id[curStartNum], curLength, MPI_CHAR, i, KMapDataTag, MPI_COMM_WORLD);
         }
       }
-      cout << "Message sent from rank 0" << endl;
+      std::cout << "Map:\trank " << rank << " has sent data"  << std::endl;
       free(file_buf);
       free(start_id);
     } else {
@@ -168,17 +167,17 @@ int main(int argc, char** argv) {
         MPI_Recv(buffer, total_chars, MPI_CHAR, 0, KMapDataTag, MPI_COMM_WORLD, &status);
         buffer[total_chars] = '\0';
       }
-      cout << "message received from rank 0 at rank " << rank << endl;
+      std::cout << "Map:\trank " << rank << " has received data"  << std::endl;
     }
 
 // Process ----------------------------------------------------------
 
-    pairs* words = NULL;
+    pairs* words = nullptr;
     int mapSize = 0;
     double start_time_noDist = MPI_Wtime();
     map<char, int> local_map;
 
-    if (buffer != NULL) {
+    if (buffer != nullptr) {
       char* word = strtok(buffer, " \r\n\t");
       while (word != NULL) {
         char NewCharacter;
@@ -192,8 +191,7 @@ int main(int argc, char** argv) {
         }
         word = strtok(NULL, " \r\n\t");
       }
-      free(buffer);
-
+      delete [] buffer;
       mapSize = local_map.size();
 
       if (mapSize > 0) {
@@ -207,7 +205,7 @@ int main(int argc, char** argv) {
       }
     }
 
-    cout << "local_map ready in rank " << rank << endl;
+    std::cout << "Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
 
 // Reduce ----------------------------------------------------------
 
@@ -233,7 +231,6 @@ int main(int argc, char** argv) {
           free(local_words);
         }
       }
-      std::cout << "local_map ready in 0 \n";
 
       for (const auto& it: local_map) {
         global_map[it.first] += it.second;
@@ -244,13 +241,16 @@ int main(int argc, char** argv) {
           min_count = global_map[it.first];
         }
       }
+
+      std::cout << "Reduce:\trank " << rank << " has received data"  << std::endl;
+
     } else {
       MPI_Send(&mapSize, 1, MPI_INT, 0, KReduceInfoTag, MPI_COMM_WORLD);
       if (mapSize > 0) {
         MPI_Send(words, mapSize, obj_type, 0, KReduceDataTag, MPI_COMM_WORLD);
       }
+      std::cout << "Reduce:\trank " << rank << " has sent data"  << std::endl;
     }
-
 
     local_map.clear();
     if (words != NULL && mapSize > 0) {
@@ -260,25 +260,28 @@ int main(int argc, char** argv) {
     totalTime_NoDist += (MPI_Wtime() - start_time_noDist);
   }
 
-
 // Output ----------------------------------------------------------
   if (rank == 0) {
     fclose(file);
     double t = MPI_Wtime();
 
-    for (const auto& key_value : global_map)
-      cout << "character " << key_value.first << ": " << key_value.second << endl;
+    std::cout << "----------------------------------------------------------" << std::endl;
 
     for (const auto& key_value : global_map)
+      std::cout << "character " << key_value.first << ": " << key_value.second << std::endl;
+
+    std::cout << "----------------------------------------------------------" << std::endl;
+    for (const auto& key_value : global_map)
       if (key_value.second == max_count)
-        cout << "Min character count" << key_value.first << ": " << key_value.second << endl;
+        std::cout << "Min character count " << key_value.first << ": " << key_value.second << std::endl;
 
     for (const auto& key_value : global_map)
       if (key_value.second == min_count)
-        cout << "Min character count" << key_value.first << ": " << key_value.second << endl;
+        std::cout << "Min character count " << key_value.first << ": " << key_value.second << std::endl;
 
+    std::cout << "----------------------------------------------------------" << std::endl;
     double endTime = MPI::Wtime();
-    cout << "Total Time taken: " << totalTime_NoDist + endTime - t << " seconds" << endl;
+    std::cout << "Total Time taken: " << totalTime_NoDist + endTime - t << " seconds" << std::endl;
     global_map.clear();
   }
 
