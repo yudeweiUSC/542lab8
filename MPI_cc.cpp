@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
     std::cout << "----------------------------------------------------------" << std::endl;
     for (const auto& key_value : global_map)
       if (key_value.second == max_count)
-        std::cout << "Min character count " << key_value.first << ": " << key_value.second << std::endl;
+        std::cout << "Max character count " << key_value.first << ": " << key_value.second << std::endl;
 
     for (const auto& key_value : global_map)
       if (key_value.second == min_count)
@@ -283,6 +283,8 @@ int main(int argc, char** argv) {
     double endTime = MPI::Wtime();
     std::cout << "Total Time taken: " << totalTime_NoDist + endTime - t << " seconds" << std::endl;
     global_map.clear();
+
+    std::cout << "----------------------------------------------------------" << std::endl;
   }
 
   MPI_Finalize();
