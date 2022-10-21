@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
     //   std::cout << "character " << key_value.first << ": " << key_value.second << std::endl;
     for (int i = 0; i < local_map.size(); ++i) {
 
-      std::cout << "rank " << rank << "  " << characters[i].character << ": " << characters[i].count << std::endl;
+      std::cout << "sent rank " << rank << "  " << characters[i].character << ": " << characters[i].count << std::endl;
     }
 
     std::cout << "Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
@@ -216,12 +216,14 @@ int main(int argc, char** argv) {
         MPI_Status status;
         MPI_Recv(&leng, 1, MPI_INT, i, kReduceInfoTag, MPI_COMM_WORLD, &status);
 
-        std::cout << "rank " << rank << "  " << leng << "received "<< std::endl;
+        std::cout << "recieved rank " << rank << "  " << leng << "received "<< std::endl;
         if (leng > 0) {
-          pairs* local_characters = (pairs*)malloc(leng);
+          pairs* local_characters = (pairs*)malloc(leng * sizeof(pairs));
           MPI_Recv(local_characters, leng, obj_type, i, kReduceDataTag, MPI_COMM_WORLD, &status);
 
-          for (int j = 0; j < leng / sizeof(pairs); ++ j) {
+          for (int j = 0; j < leng; ++ j) {
+            
+      std::cout << "recieved rank " << rank << "  " << local_characters[i].character << ": " << local_characters[i].count << std::endl;
             global_map[local_characters[j].character] += local_characters[j].count;
           }
 
