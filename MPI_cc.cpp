@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
     //   std::cout << "character " << key_value.first << ": " << key_value.second << std::endl;
     for (int i = 0; i < local_map.size(); ++i) {
 
-      std::cout << "character " << characters[i].character << ": " << characters[i].count << std::endl;
+      std::cout << "rank " << rank << "  " << characters[i].character << ": " << characters[i].count << std::endl;
     }
 
     std::cout << "Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
@@ -216,11 +216,12 @@ int main(int argc, char** argv) {
         MPI_Status status;
         MPI_Recv(&leng, 1, MPI_INT, i, kReduceInfoTag, MPI_COMM_WORLD, &status);
 
+        std::cout << "rank " << rank << "  " << leng << "received "<< std::endl;
         if (leng > 0) {
-          pairs* local_characters = (pairs*)malloc(leng * sizeof(pairs));
+          pairs* local_characters = (pairs*)malloc(leng);
           MPI_Recv(local_characters, leng, obj_type, i, kReduceDataTag, MPI_COMM_WORLD, &status);
 
-          for (int j = 0; j < leng; ++ j) {
+          for (int j = 0; j < leng / sizeof(pairs); ++ j) {
             global_map[local_characters[j].character] += local_characters[j].count;
           }
 
@@ -241,6 +242,7 @@ int main(int argc, char** argv) {
       std::cout << "Reduce:\trank " << rank << " has received data"  << std::endl;
 
     } else {
+      std::cout << "rank " << rank << "  " << mapSize << "sent "<< std::endl;
       MPI_Send(&mapSize, 1, MPI_INT, 0, kReduceInfoTag, MPI_COMM_WORLD);
       if (mapSize > 0) {
         MPI_Send(characters, mapSize, obj_type, 0, kReduceDataTag, MPI_COMM_WORLD);
