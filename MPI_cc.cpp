@@ -199,8 +199,12 @@ int main(int argc, char** argv) {
       }
     }
     
-    for (const auto& key_value : local_map)
-      std::cout << "rank " << rank << "  " << key_value.first << ": " << key_value.second << std::endl;
+    // for (const auto& key_value : global_map)
+    //   std::cout << "character " << key_value.first << ": " << key_value.second << std::endl;
+    for (int i = 0; i < local_map.size(); ++i) {
+
+      std::cout << "character " << characters[i].character << ": " << characters[i].count << std::endl;
+    }
 
     std::cout << "Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
 
