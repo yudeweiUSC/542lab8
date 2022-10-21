@@ -12,10 +12,11 @@
 
 constexpr long long int KMemory = 1 << 30;  // 1 GiB
 long long int buff_size = 1 << 20;  // 1 MiB
+constexpr int kWordLength = 1 << 5;  // 32 B
 size_t last_pos = 0;
 
 struct pairs {  // some_word: some_count
-  char word[32];     // historical reason I use int here :-) hahahaha bug solved
+  char word[kWordLength];  
   int count;
 };
 
@@ -53,7 +54,7 @@ char* ReadFile(FILE* file, size_t file_size) {
 
 int main(int argc, char** argv) {
   int count_task, rank;
-  int blocks[2] = {32, 1};
+  int blocks[2] = {kWordLength, 1};
   MPI_Aint charex, intex, displacements[2];
   MPI_Datatype obj_type, types[2] = {MPI_CHAR, MPI_INT};
   MPI_Init(&argc, &argv);
