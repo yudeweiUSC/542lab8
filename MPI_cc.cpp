@@ -15,7 +15,7 @@ long long int buff_size = 1 << 20;  // 1 MiB
 size_t last_pos = 0;
 
 struct pairs {  // some_character: some_count
-  int character;
+  int character;    // historical reason I use int here :-) hahahaha bug solved
   int count;
 };
 
@@ -200,10 +200,6 @@ int main(int argc, char** argv) {
         }
       }
     }
-    
-    // for (const auto& key_value : global_map)
-    //   std::cout << "character " << key_value.first << ": " << key_value.second << std::endl;
-
 
     std::cout << "Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
 
@@ -214,16 +210,11 @@ int main(int argc, char** argv) {
         int leng;
         MPI_Status status;
         MPI_Recv(&leng, 1, MPI_INT, i, kReduceInfoTag, MPI_COMM_WORLD, &status);
-
-        std::cout << "recieved rank " << rank << "  " << leng << "received "<< std::endl;
         if (leng > 0) {
           pairs* local_characters = new pairs[leng];
-          // pairs* local_characters = (pairs*)malloc(leng * sizeof(pairs));
           MPI_Recv(local_characters, leng, obj_type, i, kReduceDataTag, MPI_COMM_WORLD, &status);
 
           for (int j = 0; j < leng; ++ j) {
-            
-      std::cout << "recieved rank " << rank << "  " << local_characters[j].character << ": " << local_characters[j].count << std::endl;
             global_map[local_characters[j].character] += local_characters[j].count;
           }
 
@@ -232,7 +223,6 @@ int main(int argc, char** argv) {
       }
 
       for (const auto& it: local_map) {
-      std::cout << "local rank " << rank << "  " << it.first << ": " <<  global_map[it.first]<< " + " << it.second << std::endl;
         global_map[it.first] += it.second;
         if (global_map[it.first] > max_count) {
           max_count = global_map[it.first];
@@ -245,12 +235,7 @@ int main(int argc, char** argv) {
       std::cout << "Reduce:\trank " << rank << " has received data"  << std::endl;
 
     } else {
-      std::cout << "rank " << rank << "  " << mapSize << "sent "<< std::endl;
       MPI_Send(&mapSize, 1, MPI_INT, 0, kReduceInfoTag, MPI_COMM_WORLD);
-          for (int i = 0; i < mapSize; ++i) {
-
-      std::cout << "sent rank " << rank << "  " << characters[i].character << ": " << characters[i].count << std::endl;
-    }
       if (mapSize > 0) {
         MPI_Send(characters, mapSize, obj_type, 0, kReduceDataTag, MPI_COMM_WORLD);
       }
