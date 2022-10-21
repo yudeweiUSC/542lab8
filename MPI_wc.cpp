@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
   MPI_Type_commit(&obj_type);
 
   int n_total_lines = 0;
-  int max_count = 1, min_count = 1;
+  int max_count = 1, min_count = 10000000;
   buff_size = KMemory;
   char* file_buf;
   long long int* start_id;

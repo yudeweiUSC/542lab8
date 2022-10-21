@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
   MPI_Type_commit(&obj_type);
 
   int n_total_lines = 0;
-  int max_count = 1, min_count = 1;
+  int max_count = 1, min_count = 10000000;
   buff_size = KMemory;
   char* file_buf;
   long long int* start_id;
@@ -198,6 +198,9 @@ int main(int argc, char** argv) {
         }
       }
     }
+    
+    for (const auto& key_value : local_map)
+      std::cout << "rank " << rank << "  " << key_value.first << ": " << key_value.second << std::endl;
 
     std::cout << "Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
 
