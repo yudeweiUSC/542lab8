@@ -217,12 +217,6 @@ int main(int argc, char** argv) {
 
       for (const auto& it: local_map) {
         global_map[it.first] += it.second;
-        if (global_map[it.first] > max_count) {
-          max_count = global_map[it.first];
-        }
-        if (global_map[it.first] < min_count) {
-          min_count = global_map[it.first];
-        }
       }
 
       std::cout << "Reduce:\trank " << rank << " has received data"  << std::endl;
@@ -246,7 +240,16 @@ int main(int argc, char** argv) {
 
   if (rank == 0) {
     fclose(file);
-
+    
+    for (const auto& it: global_map) {
+      if (global_map[it.first] > max_count) {
+        max_count = global_map[it.first];
+      }
+      if (global_map[it.first] < min_count) {
+        min_count = global_map[it.first];
+      }
+    }
+    
     std::cout << "----------------------------------------------------------" << std::endl;
 
     for (const auto& key_value : global_map)
