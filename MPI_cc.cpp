@@ -15,8 +15,8 @@ long long int buff_size = 1 << 20;  // 1 MiB
 size_t last_pos = 0;
 
 struct pairs {  // some_character: some_count
-  char character;
-  size_t count;
+  int character;
+  int count;
 };
 
 char* ReadFile(FILE* file, size_t file_size) {
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   int count_task, rank;
   int blocks[2] = {1, 1};
   MPI_Aint charex, intex, displacements[2];
-  MPI_Datatype obj_type, types[2] = {MPI_CHAR, MPI_INT};
+  MPI_Datatype obj_type, types[2] = {MPI_INT, MPI_INT};
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &count_task);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -232,8 +232,8 @@ int main(int argc, char** argv) {
       }
 
       for (const auto& it: local_map) {
-        global_map[it.first] += it.second;
       std::cout << "local rank " << rank << "  " << it.first << ": " <<  global_map[it.first]<< " + " << it.second << std::endl;
+        global_map[it.first] += it.second;
         if (global_map[it.first] > max_count) {
           max_count = global_map[it.first];
         }
