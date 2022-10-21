@@ -59,10 +59,6 @@ int main(int argc, char** argv) {
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &count_task);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  // MPI_Type_extent(MPI_INT, &intex);
-  // MPI_Type_extent(MPI_CHAR, &charex);
-  // displacements[0] = (MPI_Aint)(0);
-  // displacements[1] = intex;
   displacements[0] = offsetof(pairs, character);
   displacements[1] = offsetof(pairs, count);
   MPI_Type_struct(2, blocks, displacements, types, &obj_type);
@@ -80,7 +76,6 @@ int main(int argc, char** argv) {
   constexpr int kReduceDataTag = 4;
 
   double start_time = MPI_Wtime();
-  std::cout << "----------------------------------------------------------" << std::endl;
 
   size_t file_size;
   FILE* file;
@@ -107,6 +102,7 @@ int main(int argc, char** argv) {
 
     int status = 1;
     if (rank == 0) {
+      std::cout << "----------------------------------------------------------" << std::endl;
       start_id = new long long int[buff_size / 10];
       file_buf = ReadFile(file, file_size);
       start_id[0] = 0;
@@ -142,7 +138,7 @@ int main(int argc, char** argv) {
       buffer = new char[start_id[end_num] + 1];
       strncpy(buffer, file_buf, start_id[end_num]);
       buffer[start_id[end_num]] = '\0';
-      for (int i = 1; i < count_task; i++) {
+      for (int i = 1; i < count_task; ++i) {
         int current_start_number = portion * i;
         int current_end_number = portion * (i + 1) - 1;
         if (i + 1 == count_task) {

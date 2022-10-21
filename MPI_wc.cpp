@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   int count_task, rank;
   int blocks[2] = {1, 32};
   MPI_Aint charex, intex, displacements[2];
-  MPI_Datatype obj_type, types[2] = {MPI_INT, MPI_CHAR};
+  MPI_Datatype obj_type, types[2] = {MPI_CHAR, MPI_INT};
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &count_task);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -92,7 +92,6 @@ int main(int argc, char** argv) {
   constexpr int kReduceDataTag = 4;
 
   double start_time = MPI_Wtime();
-  std::cout << "----------------------------------------------------------" << std::endl;
 
   size_t file_size;
   FILE* file;
@@ -119,6 +118,7 @@ int main(int argc, char** argv) {
 
     int status = 1;
     if (rank == 0) {
+      std::cout << "----------------------------------------------------------" << std::endl;
       start_id = new long long int[buff_size / 10];
       file_buf = ReadFile(file, file_size);
       start_id[0] = 0;
@@ -163,18 +163,22 @@ int main(int argc, char** argv) {
         if (current_start_number < 0) {
           current_start_number = 0;
         }
-        int curLength = start_id[current_end_number + 1] - start_id[current_start_number];
-        MPI_Send(&curLength, 1, MPI_INT, i, kMapInfoTag, MPI_COMM_WORLD);
-        if (curLength > 0) {
-          MPI_Send(file_buf + start_id[current_start_number], curLength, MPI_CHAR, i, kMapDataTag, MPI_COMM_WORLD);
+        int current_length = start_id[current_end_number + 1] - start_id[current_start_number];
+        MPI_Send(&current_length, 1, MPI_INT, i, kMapInfoTag, MPI_COMM_WORLD);
+        if (current_length > 0) {
+          MPI_Send(file_buf + start_id[current_start_number], current_length, MPI_CHAR, i, kMapDataTag, MPI_COMM_WORLD);
         }
       }
-      std::cout << "Map:\trank " << rank << " has sent data"  << std::endl;
+      std::cout << "rank 0 info sent" << std::endl;
+      // std::cout << "Map:\trank " << rank << " has sent data"  << std::endl;
+      std::cout << "rank 0 info sent" << std::endl;
       free(file_buf);
+      std::cout << "rank 0 info sent" << std::endl;
       free(start_id);
+      std::cout << "rank 0 info sent" << std::endl;
     } else {
       MPI_Status status;
-      MPI_Recv(&total_chars, 1, MPI_INT, 0, kMapInfoTag, MPI_COMM_WORLD, &status);  // receive data to process
+      MPI_Recv(&total_chars, 1, MPI_INT, 0, kMapInfoTag, MPI_COMM_WORLD, &status); 
       if (total_chars > 0) {
         buffer = new char[total_chars + 1];
         MPI_Recv(buffer, total_chars, MPI_CHAR, 0, kMapDataTag, MPI_COMM_WORLD, &status);
@@ -190,6 +194,7 @@ int main(int argc, char** argv) {
     double start_time_no_dist = MPI_Wtime();
     std::map<std::string, int> local_map;
 
+    std::cout << "start Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
     if (buffer != nullptr) {
       char* word = strtok(buffer, " *,&.()_?:\'\"/;[]\\\r\n\t1234567890$+=-");
       while (word != nullptr) {
