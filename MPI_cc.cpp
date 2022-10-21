@@ -15,8 +15,8 @@ long long int buff_size = 1 << 20;  // 1 MiB
 size_t last_pos = 0;
 
 struct pairs {  // some_character: some_count
-  char character;
   size_t count;
+  char character;
 };
 
 char* ReadFile(FILE* file, size_t file_size) {
@@ -215,7 +215,8 @@ int main(int argc, char** argv) {
 
         std::cout << "recieved rank " << rank << "  " << leng << "received "<< std::endl;
         if (leng > 0) {
-          pairs* local_characters = (pairs*)malloc(leng * sizeof(pairs));
+          pairs* local_characters = new pairs[leng];
+          // pairs* local_characters = (pairs*)malloc(leng * sizeof(pairs));
           MPI_Recv(local_characters, leng, obj_type, i, kReduceDataTag, MPI_COMM_WORLD, &status);
 
           for (int j = 0; j < leng; ++ j) {
