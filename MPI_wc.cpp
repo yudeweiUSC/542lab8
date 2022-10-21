@@ -15,8 +15,8 @@ long long int buff_size = 1 << 20;  // 1 MiB
 size_t last_pos = 0;
 
 struct pairs {  // some_word: some_count
-  char word[30];
-  size_t count;
+  char word[32];     // historical reason I use int here :-) hahahaha bug solved
+  int count;
 };
 
 char* ReadFile(FILE* file, size_t file_size) {
@@ -53,18 +53,32 @@ char* ReadFile(FILE* file, size_t file_size) {
 
 int main(int argc, char** argv) {
   int count_task, rank;
-  int blocks[2] = {1, 30};
+  int blocks[2] = {1, 32};
   MPI_Aint charex, intex, displacements[2];
   MPI_Datatype obj_type, types[2] = {MPI_INT, MPI_CHAR};
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &count_task);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Type_extent(MPI_INT, &intex);
-  MPI_Type_extent(MPI_CHAR, &charex);
-  displacements[0] = (MPI_Aint)(0);
-  displacements[1] = intex;
+  // MPI_Type_extent(MPI_INT, &intex);
+  // MPI_Type_extent(MPI_CHAR, &charex);
+  // displacements[0] = (MPI_Aint)(0);
+  // displacements[1] = intex;
+  displacements[0] = offsetof(pairs, word);
+  displacements[1] = offsetof(pairs, count);
   MPI_Type_struct(2, blocks, displacements, types, &obj_type);
   MPI_Type_commit(&obj_type);
+
+
+
+
+  // MPI_Comm_size(MPI_COMM_WORLD, &count_task);
+  // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  // MPI_Type_extent(MPI_INT, &intex);
+  // MPI_Type_extent(MPI_CHAR, &charex);
+  // displacements[0] = (MPI_Aint)(0);
+  // displacements[1] = intex;
+  // MPI_Type_struct(2, blocks, displacements, types, &obj_type);
+  // MPI_Type_commit(&obj_type);
 
   int n_total_lines = 0;
   int max_count = 1, min_count = 10000000;
