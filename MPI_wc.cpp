@@ -59,26 +59,10 @@ int main(int argc, char** argv) {
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &count_task);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  // MPI_Type_extent(MPI_INT, &intex);
-  // MPI_Type_extent(MPI_CHAR, &charex);
-  // displacements[0] = (MPI_Aint)(0);
-  // displacements[1] = intex;
   displacements[0] = offsetof(pairs, word);
   displacements[1] = offsetof(pairs, count);
   MPI_Type_struct(2, blocks, displacements, types, &obj_type);
   MPI_Type_commit(&obj_type);
-
-
-
-
-  // MPI_Comm_size(MPI_COMM_WORLD, &count_task);
-  // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  // MPI_Type_extent(MPI_INT, &intex);
-  // MPI_Type_extent(MPI_CHAR, &charex);
-  // displacements[0] = (MPI_Aint)(0);
-  // displacements[1] = intex;
-  // MPI_Type_struct(2, blocks, displacements, types, &obj_type);
-  // MPI_Type_commit(&obj_type);
 
   int n_total_lines = 0;
   int max_count = 1, min_count = 10000000;
@@ -247,9 +231,7 @@ int main(int argc, char** argv) {
       std::cout << "Reduce:\trank " << rank << " has received data"  << std::endl;
 
     } else {
-      std::cout << "Reduce:\trank " << rank << " preparing to send info: " << mapSize  << std::endl;
       MPI_Send(&mapSize, 1, MPI_INT, 0, kReduceInfoTag, MPI_COMM_WORLD);
-      std::cout << "Reduce:\trank " << rank << " sent info: " << mapSize  << std::endl;
       if (mapSize > 0) {
         MPI_Send(words, mapSize, obj_type, 0, kReduceDataTag, MPI_COMM_WORLD);
       }
