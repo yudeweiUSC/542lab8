@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
 
           for (int j = 0; j < leng; ++ j) {
             
-      std::cout << "recieved rank " << rank << "  " << local_characters[i].character << ": " << local_characters[i].count << std::endl;
+      std::cout << "recieved rank " << rank << "  " << local_characters[j].character << ": " << local_characters[j].count << std::endl;
             global_map[local_characters[j].character] += local_characters[j].count;
           }
 
@@ -233,6 +233,7 @@ int main(int argc, char** argv) {
 
       for (const auto& it: local_map) {
         global_map[it.first] += it.second;
+      std::cout << "local rank " << rank << "  " << it.first << ": " <<  global_map[it.first]<< " + " << it.second << std::endl;
         if (global_map[it.first] > max_count) {
           max_count = global_map[it.first];
         }
