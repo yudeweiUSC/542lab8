@@ -201,10 +201,7 @@ int main(int argc, char** argv) {
     
     // for (const auto& key_value : global_map)
     //   std::cout << "character " << key_value.first << ": " << key_value.second << std::endl;
-    for (int i = 0; i < local_map.size(); ++i) {
 
-      std::cout << "sent rank " << rank << "  " << characters[i].character << ": " << characters[i].count << std::endl;
-    }
 
     std::cout << "Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
 
@@ -247,6 +244,10 @@ int main(int argc, char** argv) {
     } else {
       std::cout << "rank " << rank << "  " << mapSize << "sent "<< std::endl;
       MPI_Send(&mapSize, 1, MPI_INT, 0, kReduceInfoTag, MPI_COMM_WORLD);
+          for (int i = 0; i < mapSize; ++i) {
+
+      std::cout << "sent rank " << rank << "  " << characters[i].character << ": " << characters[i].count << std::endl;
+    }
       if (mapSize > 0) {
         MPI_Send(characters, mapSize, obj_type, 0, kReduceDataTag, MPI_COMM_WORLD);
       }
