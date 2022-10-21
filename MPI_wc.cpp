@@ -53,7 +53,7 @@ char* ReadFile(FILE* file, size_t file_size) {
 
 int main(int argc, char** argv) {
   int count_task, rank;
-  int blocks[2] = {1, 32};
+  int blocks[2] = {32, 1};
   MPI_Aint charex, intex, displacements[2];
   MPI_Datatype obj_type, types[2] = {MPI_CHAR, MPI_INT};
   MPI_Init(&argc, &argv);
