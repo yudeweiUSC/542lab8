@@ -10,7 +10,7 @@
 // we are using cpp, 
 // by Yuzhe, Yuhao, Yude
 
-constexpr long long int KMemory = 1 << 30;  // 1 GiB
+constexpr long long int kMemory = 1 << 30;  // 1 GiB
 long long int buff_size = 1 << 20;  // 1 MiB
 constexpr int kWordLength = 1 << 5;  // 32 B
 size_t last_pos = 0;
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 
   int n_total_lines = 0;
   int max_count = 1, min_count = 10000000;
-  buff_size = KMemory;
+  buff_size = kMemory;
   char* file_buf;
   long long int* start_id;
 
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
 
     if (rank == 0) {
       char* currptr = strchr(file_buf, 10);
-      while (!(currptr == NULL)) {
+      while (currptr != NULL) {
         start_id[++n_total_lines] = 1 + currptr - file_buf;
         currptr = strchr(currptr + 1, 10);
       }
