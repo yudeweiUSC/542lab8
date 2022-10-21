@@ -193,16 +193,12 @@ int main(int argc, char** argv) {
     int mapSize = 0;
     double start_time_no_dist = MPI_Wtime();
     std::map<std::string, int> local_map;
-
-    std::cout << "start Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
     if (buffer != nullptr) {
       char* word = strtok(buffer, " *,&.()_?:\'\"/;[]\\\r\n\t1234567890$+=-");
       while (word != nullptr) {
-    std::cout << "start Process:rank " << word << ": " << local_map[word] << std::endl;
         local_map[word] += 1;
         word = strtok(NULL, " *,&.()_?:\'\"/;[]\\\r\n\t1234567890$+=-");
       }
-      std::cout << "start Process:rank " << rank << " has processed the local_map with size " << local_map.size() << std::endl;
       free(buffer);
       mapSize = local_map.size();
 
