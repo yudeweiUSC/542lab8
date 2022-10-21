@@ -255,11 +255,11 @@ int main(int argc, char** argv) {
 
     std::cout << "----------------------------------------------------------" << std::endl;
 
-    // std::cout << "Min word count is 1: " << std::endl;
-    // for (const auto& key_value : global_map)
-    //   if (key_value.second == min_count)
-    //     std::cout << key_value.first << ", ";
-    // std::cout << std::endl;
+    std::cout << "Min word count is: " << min_count << std::endl;
+    for (const auto& key_value : global_map)
+      if (key_value.second == min_count)
+        std::cout << key_value.first << ", ";
+    std::cout << std::endl;
 
     std::cout << "----------------------------------------------------------" << std::endl;
     std::cout << "Total Time taken: " << total_time << " seconds" << std::endl;
