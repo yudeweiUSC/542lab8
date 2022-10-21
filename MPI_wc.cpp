@@ -247,7 +247,9 @@ int main(int argc, char** argv) {
       std::cout << "Reduce:\trank " << rank << " has received data"  << std::endl;
 
     } else {
+      std::cout << "Reduce:\trank " << rank << " preparing to send info: " << mapSize  << std::endl;
       MPI_Send(&mapSize, 1, MPI_INT, 0, kReduceInfoTag, MPI_COMM_WORLD);
+      std::cout << "Reduce:\trank " << rank << " sent info: " << mapSize  << std::endl;
       if (mapSize > 0) {
         MPI_Send(words, mapSize, obj_type, 0, kReduceDataTag, MPI_COMM_WORLD);
       }
