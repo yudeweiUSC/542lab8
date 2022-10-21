@@ -154,13 +154,9 @@ int main(int argc, char** argv) {
           MPI_Send(file_buf + start_id[current_start_number], current_length, MPI_CHAR, i, kMapDataTag, MPI_COMM_WORLD);
         }
       }
-      std::cout << "rank 0 info sent" << std::endl;
-      // std::cout << "Map:\trank " << rank << " has sent data"  << std::endl;
-      std::cout << "rank 0 info sent" << std::endl;
+      std::cout << "Map:\trank " << rank << " has sent data"  << std::endl;
       free(file_buf);
-      std::cout << "rank 0 info sent" << std::endl;
       free(start_id);
-      std::cout << "rank 0 info sent" << std::endl;
     } else {
       MPI_Status status;
       MPI_Recv(&total_chars, 1, MPI_INT, 0, kMapInfoTag, MPI_COMM_WORLD, &status); 
