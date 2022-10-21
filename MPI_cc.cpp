@@ -7,19 +7,20 @@
 
 #include <mpi.h>
 
-using namespace std;
+// we are using cpp, 
+// by Yuzhe, Yuhao, Yude
 
-constexpr long long int KMemory = 1083741824;  // 1 GiB
+constexpr long long int KMemory = 1 << 30;  // 1 GiB
+long long int buff_size = 1 << 20;  // 1 MiB
 size_t last_pos = 0;
-long long int buff_size = 0;  // 1 MiB
 
 struct pairs {  // some_character: some_count
   char character;
   size_t count;
 };
 
-char* readFile(FILE* file, size_t file_size) {
-  long long int read_size = min((size_t)buff_size, file_size - last_pos);
+char* ReadFile(FILE* file, size_t file_size) {
+  long long int read_size = std::min((size_t)buff_size, file_size - last_pos);
   if (read_size <= 0)
     return nullptr;
 
@@ -51,13 +52,10 @@ char* readFile(FILE* file, size_t file_size) {
 }
 
 int main(int argc, char** argv) {
-  int n_total_lines = 0, blocks[2] = {1, 1};
+  int count_task, rank;
+  int blocks[2] = {1, 1};
   MPI_Aint charex, intex, displacements[2];
   MPI_Datatype obj_type, types[2] = {MPI_INT, MPI_CHAR};
-  int max_count = 1, min_count = 1;
-  buff_size = KMemory;
-  double start_time = 0;
-  int count_task, rank;
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &count_task);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -68,17 +66,20 @@ int main(int argc, char** argv) {
   MPI_Type_struct(2, blocks, displacements, types, &obj_type);
   MPI_Type_commit(&obj_type);
 
-  constexpr int KMapInfoTag = 1;
-  constexpr int KMapDataTag = 2;
-  constexpr int KReduceInfoTag = 3;
-  constexpr int KReduceDataTag = 4;
-
+  int n_total_lines = 0;
+  int max_count = 1, min_count = 1;
+  buff_size = KMemory;
   char* file_buf;
   long long int* start_id;
-  start_time = MPI_Wtime();
 
+  constexpr int kMapInfoTag = 1;
+  constexpr int kMapDataTag = 2;
+  constexpr int kReduceInfoTag = 3;
+  constexpr int kReduceDataTag = 4;
+
+  double start_time = MPI_Wtime();
   std::cout << "----------------------------------------------------------" << std::endl;
-  // read the file at master node
+
   size_t file_size;
   FILE* file;
   if (rank == 0) {
@@ -97,14 +98,15 @@ int main(int argc, char** argv) {
     file_size = filestatus.st_size;
   }
 
-  double totalTime_noRead = 0, totalTime_NoDist = 0;
-  map<char, int> global_map;
+  double total_time = 0;
+  std::map<char, int> global_map;
 
   while (true) {
+
     int status = 1;
     if (rank == 0) {
       start_id = new long long int[buff_size / 10];
-      file_buf = readFile(file, file_size);
+      file_buf = ReadFile(file, file_size);
       start_id[0] = 0;
       if (file_buf == NULL) {
         status = 0;
@@ -112,6 +114,7 @@ int main(int argc, char** argv) {
     }
     n_total_lines = 0;
     MPI_Bcast(&status, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    std::cout << "Broadcast: status = " << status << std::endl; 
     if (status == 0) {
       break;
     }
@@ -127,44 +130,43 @@ int main(int argc, char** argv) {
       start_id[n_total_lines + 1] = strlen(file_buf);
     }
 
-    double start_time_noRead = MPI_Wtime();
-
     char* buffer = NULL;
-    int total_chars = 0, portion = 0, startNum = 0, endNum = 0;
+    int total_chars = 0, portion = 0, start_num = 0, end_num = 0;
 
 // Map ----------------------------------------------------------
 
     if (rank == 0) {
-      startNum = 0;
+      start_num = 0;
       portion = n_total_lines / count_task;
-      endNum = portion;
-      buffer = new char[start_id[endNum] + 1];
-      strncpy(buffer, file_buf, start_id[endNum]);
-      buffer[start_id[endNum]] = '\0';
-      for (int i = 1; i <= count_task - 1; i++) {
-        int curStartNum = portion * i;
-        int curEndNum = portion * (i + 1) - 1;
+      end_num = portion;
+      buffer = new char[start_id[end_num] + 1];
+      strncpy(buffer, file_buf, start_id[end_num]);
+      buffer[start_id[end_num]] = '\0';
+      for (int i = 1; i < count_task; i++) {
+        int current_start_number = portion * i;
+        int current_end_number = portion * (i + 1) - 1;
         if (i + 1 == count_task) {
-          curEndNum = n_total_lines;
+          current_end_number = n_total_lines;
         }
-        if (curStartNum < 0) {
-          curStartNum = 0;
+        if (current_start_number < 0) {
+          current_start_number = 0;
         }
-        int curLength = start_id[curEndNum + 1] - start_id[curStartNum];
-        MPI_Send(&curLength, 1, MPI_INT, i, KMapInfoTag, MPI_COMM_WORLD);
-        if (curLength > 0) {
-          MPI_Send(file_buf + start_id[curStartNum], curLength, MPI_CHAR, i, KMapDataTag, MPI_COMM_WORLD);
+        int current_length = start_id[current_end_number + 1] - start_id[current_start_number];
+        MPI_Send(&current_length, 1, MPI_INT, i, kMapInfoTag, MPI_COMM_WORLD);
+        if (current_length > 0) {
+          MPI_Send(file_buf + start_id[current_start_number], current_length, MPI_CHAR, i, kMapDataTag, MPI_COMM_WORLD);
         }
       }
       std::cout << "Map:\trank " << rank << " has sent data"  << std::endl;
       free(file_buf);
       free(start_id);
+
     } else {
       MPI_Status status;
-      MPI_Recv(&total_chars, 1, MPI_INT, 0, KMapInfoTag, MPI_COMM_WORLD, &status);  // receive data to process
+      MPI_Recv(&total_chars, 1, MPI_INT, 0, kMapInfoTag, MPI_COMM_WORLD, &status);  // receive data to process
       if (total_chars > 0) {
         buffer = new char[total_chars + 1];
-        MPI_Recv(buffer, total_chars, MPI_CHAR, 0, KMapDataTag, MPI_COMM_WORLD, &status);
+        MPI_Recv(buffer, total_chars, MPI_CHAR, 0, kMapDataTag, MPI_COMM_WORLD, &status);
         buffer[total_chars] = '\0';
       }
       std::cout << "Map:\trank " << rank << " has received data"  << std::endl;
@@ -172,34 +174,28 @@ int main(int argc, char** argv) {
 
 // Process ----------------------------------------------------------
 
-    pairs* words = nullptr;
+    pairs* characters = nullptr;
     int mapSize = 0;
-    double start_time_noDist = MPI_Wtime();
-    map<char, int> local_map;
+    double start_time_no_dist = MPI_Wtime();
+    std::map<char, int> local_map;
 
     if (buffer != nullptr) {
       char* word = strtok(buffer, " \r\n\t");
       while (word != NULL) {
-        char NewCharacter;
-        for (int j = 0; j < strlen(word); j++) {
-          NewCharacter = word[j];
-          if (local_map.find(NewCharacter) != local_map.end()) {
-            local_map[NewCharacter]++;
-          } else {
-            local_map[NewCharacter] = 1;
-          }
+        for (int j = 0; j < strlen(word); ++ j) {
+          local_map[ word[j] ] += 1;
         }
         word = strtok(NULL, " \r\n\t");
       }
-      delete [] buffer;
+      free(buffer);
       mapSize = local_map.size();
 
-      if (mapSize > 0) {
-        words = (pairs*)malloc(mapSize * sizeof(pairs));
+      if (mapSize > 0) {  // copy from map to c data structure
+        characters = (pairs*)malloc(mapSize * sizeof(pairs));
         int i = 0;
         for (const auto& key_value: local_map) {
-          words[i].character = key_value.first;
-          words[i].count = key_value.second;
+          characters[i].character = key_value.first;
+          characters[i].count = key_value.second;
           i++;
         }
       }
@@ -213,22 +209,17 @@ int main(int argc, char** argv) {
       for (int i = 1; i < count_task; i++) {
         int leng;
         MPI_Status status;
-        MPI_Recv(&leng, 1, MPI_INT, i, KReduceInfoTag, MPI_COMM_WORLD, &status);
+        MPI_Recv(&leng, 1, MPI_INT, i, kReduceInfoTag, MPI_COMM_WORLD, &status);
 
         if (leng > 0) {
-          pairs* local_words = (pairs*)malloc(leng * sizeof(pairs));
-          MPI_Recv(local_words, leng, obj_type, i, KReduceDataTag, MPI_COMM_WORLD, &status);
+          pairs* local_characters = (pairs*)malloc(leng * sizeof(pairs));
+          MPI_Recv(local_characters, leng, obj_type, i, kReduceDataTag, MPI_COMM_WORLD, &status);
 
-          for (int j = 0; j < leng; j++) {
-            if (global_map.find(local_words[j].character) != global_map.end()) {
-              global_map[local_words[j].character] += local_words[j].count;
-            } else {
-              global_map[local_words[j].character] = local_words[j].count;
-            }
+          for (int j = 0; j < leng; ++ j) {
+            global_map[local_characters[j].character] += local_characters[j].count;
           }
 
-          
-          free(local_words);
+          free(local_characters);
         }
       }
 
@@ -245,25 +236,24 @@ int main(int argc, char** argv) {
       std::cout << "Reduce:\trank " << rank << " has received data"  << std::endl;
 
     } else {
-      MPI_Send(&mapSize, 1, MPI_INT, 0, KReduceInfoTag, MPI_COMM_WORLD);
+      MPI_Send(&mapSize, 1, MPI_INT, 0, kReduceInfoTag, MPI_COMM_WORLD);
       if (mapSize > 0) {
-        MPI_Send(words, mapSize, obj_type, 0, KReduceDataTag, MPI_COMM_WORLD);
+        MPI_Send(characters, mapSize, obj_type, 0, kReduceDataTag, MPI_COMM_WORLD);
       }
       std::cout << "Reduce:\trank " << rank << " has sent data"  << std::endl;
     }
 
     local_map.clear();
-    if (words != NULL && mapSize > 0) {
-      delete[] words;
+    if (characters != nullptr && mapSize > 0) {
+      delete[] characters;
     }
-    totalTime_noRead += (MPI_Wtime() - start_time_noRead);
-    totalTime_NoDist += (MPI_Wtime() - start_time_noDist);
+    total_time += (MPI_Wtime() - start_time_no_dist);
   }
 
 // Output ----------------------------------------------------------
+
   if (rank == 0) {
     fclose(file);
-    double t = MPI_Wtime();
 
     std::cout << "----------------------------------------------------------" << std::endl;
 
@@ -275,14 +265,14 @@ int main(int argc, char** argv) {
       if (key_value.second == max_count)
         std::cout << "Max character count " << key_value.first << ": " << key_value.second << std::endl;
 
+    std::cout << "----------------------------------------------------------" << std::endl;
+    
     for (const auto& key_value : global_map)
       if (key_value.second == min_count)
         std::cout << "Min character count " << key_value.first << ": " << key_value.second << std::endl;
 
     std::cout << "----------------------------------------------------------" << std::endl;
-    double endTime = MPI::Wtime();
-    std::cout << "Total Time taken: " << totalTime_NoDist + endTime - t << " seconds" << std::endl;
-    global_map.clear();
+    std::cout << "Total Time taken: " << total_time << " seconds" << std::endl;
 
     std::cout << "----------------------------------------------------------" << std::endl;
   }
