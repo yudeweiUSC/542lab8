@@ -7,8 +7,6 @@
 
 #include <mpi.h>
 
-#include <mpi.h>
-
 // we are using cpp, 
 // by Yuzhe, Yuhao, Yude
 
@@ -120,8 +118,6 @@ int main(int argc, char** argv) {
     if (status == 0) {
       break;
     }
-
-    // Mapping operation: all other process gets the data through parent process 0
 
     if (rank == 0) {
       char* currptr = strchr(file_buf, 10);

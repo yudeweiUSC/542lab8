@@ -119,8 +119,6 @@ int main(int argc, char** argv) {
       break;
     }
 
-    //Mapping operation: all other process gets the data through parent process 0
-
     if (rank == 0) {
       char* currptr = strchr(file_buf, 10);
       while (!(currptr == NULL)) {
