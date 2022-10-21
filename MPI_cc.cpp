@@ -220,12 +220,6 @@ int main(int argc, char** argv) {
 
       for (const auto& it: local_map) {
         global_map[it.first] += it.second;
-        if (global_map[it.first] > max_count) {
-          max_count = global_map[it.first];
-        }
-        if (global_map[it.first] < min_count) {
-          min_count = global_map[it.first];
-        }
       }
 
       std::cout << "Reduce:\trank " << rank << " has received data"  << std::endl;
@@ -252,8 +246,15 @@ int main(int argc, char** argv) {
 
     std::cout << "----------------------------------------------------------" << std::endl;
 
-    for (const auto& key_value : global_map)
+    for (const auto& key_value : global_map) {
+      if (global_map[key_value.first] > max_count) {
+        max_count = global_map[key_value.first];
+      }
+      if (global_map[key_value.first] < min_count) {
+        min_count = global_map[key_value.first];
+      }
       std::cout << "character " << key_value.first << ": " << key_value.second << std::endl;
+    }
 
     std::cout << "----------------------------------------------------------" << std::endl;
     for (const auto& key_value : global_map)
